@@ -18,17 +18,27 @@ const OauthCallback = () => {
         try {
           // After token exchange
 
-          const response = await axios.post('http://localhost:3001/api/yandex/token', {
-            code,
+          const response = await axios.post(
+            'http://localhost:3001/api/yandex/token',
+            { code },
+            { withCredentials: true }
+          );
+          
+          // Then fetch session data
+          const sessionRes = await axios.get('http://localhost:3001/api/session', {
+            withCredentials: true,
           });
           
-          dispatch(login({
-            accessToken: response.data.access_token,
-            email: response.data.email,
-            name: response.data.login,
-          }));
-          
-          navigate('/');
+          if (sessionRes.data.isLoggedIn) {
+            dispatch(login({
+              accessToken: 'cookie',
+              email: sessionRes.data.email,
+              name: sessionRes.data.name,
+              avatarId: sessionRes.data.avatarId,
+            }));
+            navigate('/');
+          }
+
         } catch (err) {
           console.error('[OAuth] Token exchange failed:', err.response?.data || err.message);
         }
@@ -42,5 +52,6 @@ const OauthCallback = () => {
 
   return <div>Authorizing...</div>;
 };
+
 
 export default OauthCallback;
